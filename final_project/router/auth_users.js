@@ -50,7 +50,42 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  
+    const isbn = req.params.isbn;
+  const review = req.query.review;
+  const username = req.session.authorization.username;
+
+  if (!books[isbn]) {
+    return res.status(404).json({ message: "Book not found" });
+  }
+
+  if (!review) {
+    return res.status(400).json({ message: "Review is required" });
+  }
+
+  // Guardar/modificar la review del usuario
+  books[isbn].reviews[username] = review;
+
+  return res.status(200).json({
+    message: "Review posted/updated successfully",
+    reviews: books[isbn].reviews
+  });
+
+});
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const isbn = req.params.isbn;
+    const username = req.session.authorization.username;
+
+    if (books[isbn]) {
+        if (books[isbn].reviews[username]) {
+            delete books[isbn].reviews[username];
+            return res.status(200).json({ message: "Review deleted!" });
+        } else {
+            return res.status(404).json({ message: "No hay reseña de este usuario para eliminar" });
+        }
+    } else {
+        return res.status(404).json({ message: "Libro no encontrado" });
+    }
 });
 
 module.exports.authenticated = regd_users;
